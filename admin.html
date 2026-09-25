@@ -5,7 +5,9 @@
 <section id="panel" class="hidden"><div class="card"><button class="btn logout" id="logoutBtn">Sair</button><h1>Painel administrativo</h1><p>Reservas e pagamentos da campanha.</p></div><div class="stats"><div class="stat"><strong id="sAvail">-</strong>Disponíveis</div><div class="stat"><strong id="sRes">-</strong>Reservados</div><div class="stat"><strong id="sPaid">-</strong>Pagos</div></div><div class="toolbar"><button class="btn active" data-filter="todos">Todos</button><button class="btn" data-filter="reservado">Reservados</button><button class="btn" data-filter="pago">Pagos</button><button class="btn" id="refreshBtn">↻ Atualizar</button></div><div class="tablewrap"><table><thead><tr><th>Número</th><th>Status</th><th>Nome</th><th>WhatsApp</th><th>Reserva</th><th>Expira</th><th>Ações</th></tr></thead><tbody id="rows"></tbody></table></div></section></main>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-db=createClient(URL,KEY);
+const URL='https://qlpnugxxhimnmazhopsj.supabase.co';
+const KEY='sb_publishable_Yeax79PcMt4cKCFQlxjxkw_l-iPihW4';
+const db=createClient(URL,KEY);
 let items=[],filter='todos';
 const loginCard=document.getElementById('loginCard'),panel=document.getElementById('panel'),rows=document.getElementById('rows'),passInput=document.getElementById('pass'),loginMsg=document.getElementById('loginMsg');
 async function check(){const {data:{session}}=await db.auth.getSession();if(session){const {data}=await db.rpc('eh_admin');data?showPanel():await db.auth.signOut()}else showLogin()}
@@ -16,7 +18,7 @@ async function load(){await db.rpc('liberar_reservas_vencidas');const [pub,adm]=
 function dt(x){return x?new Date(x).toLocaleString('pt-BR'):'-'}function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function render(){const a=items.filter(x=>filter==='todos'||x.status===filter);rows.innerHTML=a.length?a.map(x=>'<tr><td><b>'+String(x.numero).padStart(3,'0')+'</b></td><td class="'+x.status+'">'+x.status.toUpperCase()+'</td><td>'+esc(x.nome)+'</td><td>'+esc(x.whatsapp)+'</td><td>'+dt(x.reservado_em)+'</td><td>'+dt(x.expira_em)+'</td><td>'+(x.status==='reservado'?'<button class="btn pay" onclick="pay('+x.numero+')">Marcar pago</button> <button class="btn release" onclick="releaseN('+x.numero+')">Liberar</button>':'-')+'</td></tr>').join(''):'<tr><td colspan="7">Nenhum registro.</td></tr>'}
 document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.filter;render()});document.getElementById('refreshBtn').onclick=load;
-async function pay(n){if(!confirm('Confirmar pagamento do número '+String(n).padStart(3,'0')+'?'))return;const {error}=await db.rpc('confirmar_pagamento',{p_numeros:[n]});if(error)alert(error.message);else load()}
-async function releaseN(n){if(!confirm('Liberar a reserva do número '+String(n).padStart(3,'0')+'?'))return;const {error}=await db.rpc('liberar_reserva_admin',{p_numero:n});if(error)alert(error.message);else load()}check();
+window.pay=async function(n){if(!confirm('Confirmar pagamento do número '+String(n).padStart(3,'0')+'?'))return;const {error}=await db.rpc('confirmar_pagamento',{p_numeros:[n]});if(error)alert(error.message);else load()}
+window.releaseN=async function(n){if(!confirm('Liberar a reserva do número '+String(n).padStart(3,'0')+'?'))return;const {error}=await db.rpc('liberar_reserva_admin',{p_numero:n});if(error)alert(error.message);else load()}check();
 
 </script></body></html>
