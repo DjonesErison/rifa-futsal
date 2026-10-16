@@ -7,7 +7,7 @@
 </style></head><body>
 <header><div class="nav"><div class="logo">⚽ RIFA <span>UM SONHO EM CAMPO</span></div><nav><a href="#historia">História</a><a href="#numeros">Números</a><a href="#pix">PIX</a><a href="admin.html">Admin</a></nav></div></header>
 <section class="hero" id="historia"><div class="heroin"><div><div class="tag">SONHE • ACREDITE • CONQUISTE</div><h1>RIFA<br><span>UM SONHO EM CAMPO</span></h1><p><strong>Náthaly tem apenas 13 anos</strong> e foi selecionada em uma peneira realizada em nossa cidade. Agora terá a oportunidade de ir a <strong>Belo Horizonte/MG</strong>, representando <strong>Petrolina/PE</strong>, rumo ao sonho de ser uma atleta profissional de futebol.</p></div><div class="player"><img src="rifa.jpg" alt="Arte da campanha Rifa Um Sonho em Campo da Náthaly"></div></div></section>
-<section class="info"><div class="ibox">🏆 <strong>R$ 300,00</strong><b>Prêmio em dinheiro ou PIX</b></div><div class="ibox">🎟️ <strong>R$ 10,00</strong>Cada número</div><div class="ibox">🔢 <strong>500</strong>Apenas 500 números</div><div class="ibox">📅 <strong>15/10/2026</strong>Data do sorteio</div></section>
+<section class="info"><div class="ibox">🏆 <strong>R$ 300,00</strong><b>Prêmio em dinheiro ou PIX</b></div><div class="ibox">🎟️ <strong>R$ 10,00</strong>Cada número</div><div class="ibox">🔢 <strong>500</strong>Apenas 500 números</div><div class="ibox">📅 <strong id="drawDate">15/10/2026</strong>Data do sorteio</div></section>
 <section class="purpose"><h2>Todo o valor arrecadado será destinado para:</h2><div class="purposes"><span>🎫 Transporte</span><span>🛏️ Hospedagem</span><span>🍴 Alimentação</span></div><p>Despesas de Náthaly e de sua mãe, que irá acompanhá-la na viagem.</p></section>
 <main class="main"><section class="card" id="numeros"><h2>🎟️ Escolha seu número</h2><p>Você concorre a <strong>R$ 300,00</strong> e ainda ajuda a realizar um sonho. Cada número custa <strong>R$ 10,00</strong>.</p><div class="statusline"><span><i class="dot d1"></i>Disponível</span><span><i class="dot d2"></i>Reservado</span><span><i class="dot d3"></i>Pago</span></div><div class="grid" id="grid"></div><div class="total"><span id="selected">Nenhum número selecionado</span><span id="total">Total: R$ 0,00</span></div><button class="reserve" id="reserveBtn" disabled>Reservar números por 30 minutos</button></section>
 <aside class="card pix" id="pix"><h2>Pagamento via PIX</h2><p>Primeiro escolha e reserve seus números. Após a reserva, o PIX e o WhatsApp serão liberados.</p><div class="locknote" id="lockNote">🔒 Realize sua reserva antes do pagamento.</div><div class="qr paylocked" id="qrBox"><img id="pixQr" alt="QR Code PIX"></div><div class="key">Chave PIX<br><strong id="pixKey">11594582785</strong><button class="copy paylocked" id="copyPix" type="button">🔒 Reserve antes de copiar o PIX</button></div><a class="wa paylocked" id="wa" href="#">🔒 Reserve antes de usar o WhatsApp</a><div class="warning">A confirmação dos números ainda é feita manualmente pelo WhatsApp.</div></aside></main>
@@ -23,6 +23,15 @@ let reservationConfirmed=false;function mustReserve(e){if(!reservationConfirmed)
 const SUPABASE_URL='https://qlpnugxxhimnmazhopsj.supabase.co';
 const SUPABASE_KEY='sb_publishable_Yeax79PcMt4cKCFQlxjxkw_l-iPihW4';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+async function loadDrawDate(){
+ try{const {data,error}=await db.rpc('obter_data_sorteio');if(error)throw error;
+ if(typeof data!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(data)||data<'0001-01-01')return;
+ const date=new Date(data+'T00:00:00Z');if(!Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==data)return;
+ document.getElementById('drawDate').textContent=data.split('-').reverse().join('/');
+ }catch(e){console.warn('Data do sorteio indisponível; mantendo a última data exibida.')}
+}
+loadDrawDate();setInterval(loadDrawDate,30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadDrawDate()});
 const price=10,grid=document.getElementById('grid'),chosen=new Set(),buttons=new Map();
 for(let i=1;i<=500;i++){const b=document.createElement('button');b.className='num';b.textContent=String(i).padStart(3,'0');b.dataset.n=i;b.onclick=()=>toggleNumber(i,b);buttons.set(i,b);grid.appendChild(b)}
 function toggleNumber(i,b){if(b.classList.contains('reserved')||b.classList.contains('paid'))return;chosen.has(i)?chosen.delete(i):chosen.add(i);b.classList.toggle('sel');update()}
